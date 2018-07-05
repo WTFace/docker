@@ -10,22 +10,20 @@ RUN apt install -y php7.2 \php7.2-curl \php7.2-common \php7.2-cli \php7.2-mysql 
 
 # COPY /etc/php/7.2/fpm/php.ini /etc/php/7.2/fpm/php.ini
 COPY nginx-laravel /etc/nginx/sites-available/default
-COPY  init.sql /home/laravel
 
 ENV COMPOSER_HOME /composer
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
 WORKDIR /home/laravel
-RUN service mysql start
-RUN echo 'source \home\laravel\init.sql;' | mysql
+COPY  init.sql /home/init.sql
 
 # Install composer
 RUN apt install -y composer
 RUN composer create-project laravel/laravel .
-
-# COPY run_service.sh /home/
+RUN echo "alias artisan='php artisan'" >> ~/.bashrc
+RUN . ~/.bashrc
 
 EXPOSE 80
 
-CMD service nginx start && service php7.2-fpm start && tail
+CMD service nginx start && service php7.2-fpm start && service mysql start && echo 'source /home/init.sql;' |mysql && tail
 
